@@ -39,22 +39,22 @@ module ZendeskAPI
             response
           end
         end
-      end
 
-      def retry_if_timeout(env)
-        retries_left = 5
+        def retry_if_timeout(env)
+          retries_left = 5
 
-        while true
-          begin
-            cloned_env = env.dup
-            return @app.call(cloned_env)
-          rescue Faraday::TimeoutError
-            @logger.info "(zendesk_api_client) Whoops! Rescued from a timeout."
-            if retries_left == 0
-              raise
-            else
-              @logger.info "(zendesk_api_client) Retrying timeouts #{retries_left} more times."
-              retries_left -= 1
+          while true
+            begin
+              cloned_env = env.dup
+              return @app.call(cloned_env)
+            rescue Faraday::TimeoutError
+              @logger.info "(zendesk_api_client) Whoops! Rescued from a timeout."
+              if retries_left == 0
+                raise
+              else
+                @logger.info "(zendesk_api_client) Retrying timeouts #{retries_left} more times."
+                retries_left -= 1
+              end
             end
           end
         end
