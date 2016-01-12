@@ -1,4 +1,5 @@
 require "faraday/middleware"
+require "zendesk_api/error"
 
 module ZendeskAPI
   module Middleware
@@ -47,12 +48,12 @@ module ZendeskAPI
             begin
               cloned_env = env.dup
               return @app.call(cloned_env)
-            rescue Faraday::TimeoutError
-              @logger.info "(zendesk_api_client) Whoops! Rescued from a timeout."
+            rescue Error::NetworkError
+              @logger.info "(zendesk_api_client) Whoops! Rescued from a network error (probably a timeout)."
               if retries_left == 0
                 raise
               else
-                @logger.info "(zendesk_api_client) Retrying timeouts #{retries_left} more times."
+                @logger.info "(zendesk_api_client) Retrying network errors #{retries_left} more times."
                 retries_left -= 1
               end
             end
