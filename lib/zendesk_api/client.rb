@@ -6,6 +6,7 @@ require 'zendesk_api/configuration'
 require 'zendesk_api/collection'
 require 'zendesk_api/lru_cache'
 require 'zendesk_api/middleware/request/etag_cache'
+require 'zendesk_api/middleware/request/throttle'
 require 'zendesk_api/middleware/request/retry'
 require 'zendesk_api/middleware/request/upload'
 require 'zendesk_api/middleware/request/encode_json'
@@ -136,6 +137,8 @@ module ZendeskAPI
     # Retry middleware if retry is true
     def build_connection
       Faraday.new(config.options) do |builder|
+        builder.use ZendeskAPI::Middleware::Request::Retry, :logger => config.logger if config.retry
+
         # response
         builder.use ZendeskAPI::Middleware::Response::RaiseError
         builder.use ZendeskAPI::Middleware::Response::Callback, self
@@ -166,7 +169,7 @@ module ZendeskAPI
         builder.use ZendeskAPI::Middleware::Request::Upload
         builder.request :multipart
         builder.use ZendeskAPI::Middleware::Request::EncodeJson
-        builder.use ZendeskAPI::Middleware::Request::Retry, :logger => config.logger if config.retry # Should always be first in the stack
+        builder.use ZendeskAPI::Middleware::Request::Throttle, :logger => config.logger if config.retry # Should always be first in the stack
 
         builder.adapter *adapter
       end
