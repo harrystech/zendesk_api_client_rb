@@ -17,7 +17,7 @@ module ZendeskAPI
         def call(env)
           original_env = env.dup
 
-          if original_env[:method] == :get || :put
+          if original_env[:method] == (:get || :put)
             retry_if_safe(original_env)
           else
             @app.call(original_env)
